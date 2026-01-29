@@ -1221,7 +1221,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\GAUTAM CURRENT PROJECT\\zirakbook-29-jan\\accounting_db\\prisma\\generated\\client",
+      "value": "C:\\Users\\kiaan\\Desktop\\Kiaan\\ZirakBook Accounting New Latest\\Backend-Zirakbook\\prisma\\generated\\client",
       "fromEnvVar": null
     },
     "config": {
@@ -1235,7 +1235,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\GAUTAM CURRENT PROJECT\\zirakbook-29-jan\\accounting_db\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\kiaan\\Desktop\\Kiaan\\ZirakBook Accounting New Latest\\Backend-Zirakbook\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

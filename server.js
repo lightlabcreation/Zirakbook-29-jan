@@ -43,20 +43,38 @@ const roleRoutes = require('./src/routes/roleRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const reportRoutes = require('./src/routes/reportRoutes');
 
+const prisma = require('./src/config/prisma');
+
 // Force Restart
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 // Debug logging for startup
 console.log('--- SERVER STARTUP ---');
-console.log(`Environment: ${process.env.NODE_ENV}`);
+console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 console.log(`Port Configured: ${PORT}`);
 console.log(`Current Working Directory: ${process.cwd()}`);
+
+// Database Connection Check
+prisma.$connect()
+    .then(() => {
+        console.log('✅ Database connected successfully');
+    })
+    .catch((err) => {
+        console.error('❌ Database connection failed!');
+        console.error(err.message);
+    });
 
 process.on('uncaughtException', (err) => {
     console.error('UNCAUGHT EXCEPTION! Shutting down...');
     console.error(err.name, err.message);
     console.error(err.stack);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('UNHANDLED REJECTION! Shutting down...');
+    console.error(err.name, err.message);
     process.exit(1);
 });
 

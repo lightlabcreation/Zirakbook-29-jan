@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 // Create Customer with Auto-Ledger Creation
 const createCustomer = async (data) => {

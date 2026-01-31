@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 // Initialize Default Chart of Accounts for a Company
 const initializeChartOfAccounts = async (companyId) => {

@@ -61,7 +61,7 @@ const transferStock = async (req, res) => {
             });
 
             // 3. Log Transaction
-            await prisma.inventoryTransaction.create({
+            await prisma.inventorytransaction.create({
                 data: {
                     type: 'TRANSFER',
                     productId: parseInt(productId),
@@ -133,7 +133,7 @@ const adjustStock = async (req, res) => {
             });
 
             // 2. Log Transaction
-            await prisma.inventoryTransaction.create({
+            await prisma.inventorytransaction.create({
                 data: {
                     type: 'ADJUSTMENT',
                     productId: parseInt(productId),
@@ -174,7 +174,7 @@ const getInventoryHistory = async (req, res) => {
             ];
         }
 
-        const transactions = await prisma.inventoryTransaction.findMany({
+        const transactions = await prisma.inventorytransaction.findMany({
             where,
             include: {
                 product: { select: { name: true, sku: true } },

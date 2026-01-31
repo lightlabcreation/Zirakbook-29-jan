@@ -38,7 +38,13 @@ const login = async (req, res) => {
 
         const user = await prisma.user.findUnique({
             where: { email },
-            include: { company: true }
+            include: {
+                company: {
+                    include: {
+                        plan: true
+                    }
+                }
+            }
         });
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
@@ -60,13 +66,36 @@ const login = async (req, res) => {
         );
 
         let permissions = [];
+        let planModules = [];
+
         try {
-            if (user.role && user.role !== 'SUPERADMIN' && prisma.role) {
+            // Fetch Role Permissions
+            if (user.role && user.role !== 'SUPERADMIN') {
+                const whereClause = {
+                    companyId: user.companyId
+                };
+
+                if (user.roleId) {
+                    whereClause.id = user.roleId;
+                } else {
+                    whereClause.name = user.role;
+                }
+
                 const roleData = await prisma.role.findFirst({
-                    where: { name: user.role, companyId: user.companyId }
+                    where: whereClause
                 });
+
                 if (roleData && roleData.permissions) {
                     permissions = JSON.parse(roleData.permissions);
+                }
+            }
+
+            // Extract Plan Modules if available
+            if (user.company && user.company.plan && user.company.plan.modules) {
+                try {
+                    planModules = JSON.parse(user.company.plan.modules);
+                } catch (pe) {
+                    console.error("Plan module parse error", pe);
                 }
             }
         } catch (e) {
@@ -83,7 +112,8 @@ const login = async (req, res) => {
                 role: user.role,
                 companyId: user.companyId,
                 company: user.company,
-                permissions: permissions
+                permissions: permissions,
+                planModules: planModules
             },
         });
     } catch (error) {

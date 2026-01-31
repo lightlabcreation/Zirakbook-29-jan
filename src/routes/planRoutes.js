@@ -10,9 +10,9 @@ const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddle
 
 const router = express.Router();
 
-// Only Superadmin can manage plans
+// Only Superadmin can manage plans (except getting list)
 router.post('/', authenticateToken, authorizeRoles('SUPERADMIN'), createPlan);
-router.get('/', authenticateToken, authorizeRoles('SUPERADMIN'), getPlans);
+router.get('/', getPlans);
 router.get('/:id', authenticateToken, authorizeRoles('SUPERADMIN'), getPlanById);
 router.put('/:id', authenticateToken, authorizeRoles('SUPERADMIN'), updatePlan);
 router.delete('/:id', authenticateToken, authorizeRoles('SUPERADMIN'), deletePlan);

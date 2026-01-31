@@ -29,9 +29,9 @@ const createPlan = async (req, res) => {
                 storageCapacity,
                 billingCycle,
                 status,
-                modules: modules || [],
+                modules: modules ? (typeof modules === 'object' ? JSON.stringify(modules) : modules) : "[]",
                 totalPrice: parseFloat(totalPrice) || 0,
-                descriptions: descriptions || []
+                descriptions: descriptions ? (typeof descriptions === 'object' ? JSON.stringify(descriptions) : descriptions) : "[]"
             }
         });
 
@@ -47,11 +47,19 @@ const getPlans = async (req, res) => {
         const plans = await prisma.plan.findMany({
             include: {
                 _count: {
-                    select: { companies: true }
+                    select: { company: true }
                 }
             }
         });
-        res.json(plans);
+
+        // Parse JSON fields
+        const parsedPlans = plans.map(plan => ({
+            ...plan,
+            modules: plan.modules ? JSON.parse(plan.modules) : [],
+            descriptions: plan.descriptions ? JSON.parse(plan.descriptions) : []
+        }));
+
+        res.json(parsedPlans);
     } catch (error) {
         console.error('Get Plans Error:', error);
         res.status(500).json({ error: error.message });
@@ -64,12 +72,20 @@ const getPlanById = async (req, res) => {
             where: { id: parseInt(req.params.id) },
             include: {
                 _count: {
-                    select: { companies: true }
+                    select: { company: true }
                 }
             }
         });
         if (!plan) return res.status(404).json({ message: 'Plan not found' });
-        res.json(plan);
+
+        // Parse JSON fields
+        const parsedPlan = {
+            ...plan,
+            modules: plan.modules ? JSON.parse(plan.modules) : [],
+            descriptions: plan.descriptions ? JSON.parse(plan.descriptions) : []
+        };
+
+        res.json(parsedPlan);
     } catch (error) {
         console.error('Get Plan By ID Error:', error);
         res.status(500).json({ error: error.message });
@@ -105,9 +121,9 @@ const updatePlan = async (req, res) => {
                 storageCapacity,
                 billingCycle,
                 status,
-                modules: modules || [],
+                modules: modules ? (typeof modules === 'object' ? JSON.stringify(modules) : modules) : "[]",
                 totalPrice: parseFloat(totalPrice) || 0,
-                descriptions: descriptions || []
+                descriptions: descriptions ? (typeof descriptions === 'object' ? JSON.stringify(descriptions) : descriptions) : "[]"
             }
         });
 

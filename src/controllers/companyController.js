@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
+const chartOfAccountsService = require('../services/chartOfAccountsService');
 const { isCloudinaryConfigured } = require('../utils/cloudinaryConfig');
 
 const createCompany = async (req, res) => {
@@ -45,18 +46,80 @@ const createCompany = async (req, res) => {
                 }
             });
 
+            // Derive permissions from Plan Modules
+            let modulesArray = [];
+            try {
+                if (planId) {
+                    const plan = await tx.plan.findUnique({ where: { id: parseInt(planId) } });
+                    if (plan && plan.modules) {
+                        modulesArray = JSON.parse(plan.modules);
+                    }
+                }
+            } catch (e) {
+                console.error("Module parse error:", e);
+            }
+
+            const enabledModules = modulesArray.filter(m => m.enabled).map(m => (m.name || m.module_name || "").toLowerCase());
+
+            // Base permissions (always included for company admin - requested default menus)
+            let defaultPermissions = [
+                "show dashboard",
+                "manage voucher", "create voucher", "edit voucher", "delete voucher",
+                "manage reports", "view reports",
+                "manage user", "create user", "edit user", "delete user",
+                "manage role", "create role", "edit role", "delete role",
+                "manage settings", "edit settings", "view settings"
+            ];
+
+            // Module specific mapping (gated menus)
+            const moduleMapping = {
+                'account': ["manage accounts", "create accounts", "edit accounts", "delete accounts"],
+                'accounts': ["manage accounts", "create accounts", "edit accounts", "delete accounts"],
+                'inventory': ["manage inventory", "create inventory", "edit inventory", "delete inventory"],
+                'sales': ["manage sales", "create sales", "edit sales", "delete sales", "show sales", "send sales"],
+                'purchase': ["manage purchases", "create purchases", "edit purchases", "delete purchases"],
+                'purchases': ["manage purchases", "create purchases", "edit purchases", "delete purchases"],
+                'pos': ["manage pos", "create pos", "edit pos", "delete pos"]
+            };
+
+            enabledModules.forEach(modName => {
+                for (const key in moduleMapping) {
+                    if (modName.includes(key)) {
+                        defaultPermissions = [...new Set([...defaultPermissions, ...moduleMapping[key]])];
+                    }
+                }
+            });
+
+            const role = await tx.role.create({
+                data: {
+                    name: 'COMPANY',
+                    companyId: company.id,
+                    permissions: JSON.stringify(defaultPermissions)
+                }
+            });
+
             const user = await tx.user.create({
                 data: {
                     name,
                     email,
                     password: hashedPassword,
                     role: 'COMPANY',
+                    roleId: role.id,
                     companyId: company.id
                 }
             });
 
             return { company, user };
+        }, {
+            timeout: 15000
         });
+
+        // Initialize Chart of Accounts for the new company
+        try {
+            await chartOfAccountsService.initializeChartOfAccounts(result.company.id);
+        } catch (coaError) {
+            console.error('COA Initialization Error (Skipping):', coaError);
+        }
 
         res.status(201).json(result.company);
     } catch (error) {
@@ -71,7 +134,7 @@ const getCompanies = async (req, res) => {
     try {
         const companies = await prisma.company.findMany({
             include: {
-                users: true,
+                user: true,
                 plan: true
             }
         });

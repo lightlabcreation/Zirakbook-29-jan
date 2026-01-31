@@ -9,11 +9,12 @@ const {
     rejectPlanRequest
 } = require('../controllers/planRequestController');
 const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
+const { upload } = require('../utils/cloudinaryConfig');
 
 const router = express.Router();
 
-// Only Superadmin can manage plan requests
-router.post('/', authenticateToken, authorizeRoles('SUPERADMIN'), createPlanRequest);
+// Allow public to create plan requests, manage requires Superadmin
+router.post('/', upload.single('logo'), createPlanRequest);
 router.get('/', authenticateToken, authorizeRoles('SUPERADMIN'), getPlanRequests);
 router.get('/:id', authenticateToken, authorizeRoles('SUPERADMIN'), getPlanRequestById);
 router.put('/:id', authenticateToken, authorizeRoles('SUPERADMIN'), updatePlanRequest);
